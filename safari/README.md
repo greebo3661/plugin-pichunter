@@ -14,6 +14,8 @@ The default base folder is `pichunter`. Change it in the extension settings.
 
 Safari Web Extension source must be converted and built on macOS with Xcode before it can run.
 
+The settings page includes minimum and maximum file size sliders. The default is no filtering: minimum `0 B`, maximum `No limit`.
+
 ## Services and Ports
 
 No services are started.
@@ -57,8 +59,9 @@ xcrun safari-web-extension-converter plugin-pichunter/safari
 2. Wait until dynamic content finishes loading.
 3. Click `pichunter`.
 4. Optional: click `Settings`, configure the base folder inside Downloads, and enable the save dialog if needed.
-5. Click `Save page images`.
-6. Open the saved images under `Downloads/<base folder>/<domain>/<page title>/`, or use the save dialog destinations if enabled.
+5. Optional: adjust the minimum and maximum file size sliders.
+6. Click `Save page images`.
+7. Open the saved images under `Downloads/<base folder>/<domain>/<page title>/`, or use the save dialog destinations if enabled.
 
 ## Rebuild
 
@@ -74,7 +77,8 @@ After editing source files, rebuild the Safari Web Extension project in Xcode an
 4. Click the `pichunter` extension icon.
 5. Click `Save page images`.
 6. Confirm image files appear under `Downloads/pichunter/<domain>/<page title>/`.
-7. Open `Settings`, enable `Ask where to save each image`, run save again, and confirm Safari opens a save dialog.
+7. Open `Settings`, set a minimum size that excludes small icons, run save again, and confirm fewer files are saved or skipped by size.
+8. Enable `Ask where to save each image`, run save again, and confirm Safari opens a save dialog.
 
 ## Current Limitations and Known Risks
 
@@ -85,4 +89,5 @@ After editing source files, rebuild the Safari Web Extension project in Xcode an
 - CSS background images, canvas content, blob-only generated images, and images inside inaccessible iframes are not saved.
 - Lazy-loaded images that have not resolved to an `http` or `https` URL are not saved.
 - Some sites can block direct image downloads.
+- File size filtering requires fetching image data before saving, so blocked image requests are reported as failed.
 - Browser-internal and restricted pages cannot be scanned.

@@ -27,6 +27,20 @@
           Used when the save dialog option is disabled.
           Final path: Downloads/&lt;base folder&gt;/&lt;domain&gt;/&lt;page title&gt;/&lt;image file&gt;
         </p>
+        <fieldset>
+          <legend>Image file size</legend>
+          <label for="minFileSize">Minimum size: <span id="minFileSizeValue">0 B</span></label>
+          <input id="minFileSize" name="minFileSize" type="range" min="0" max="100" step="any">
+          <label for="maxFileSize">Maximum size: <span id="maxFileSizeValue">No limit</span></label>
+          <input id="maxFileSize" name="maxFileSize" type="range" min="0" max="100" step="any">
+          <div class="range-scale">
+            <span>0</span>
+            <span>No limit</span>
+          </div>
+          <p class="hint">
+            The scale is curved for easier control of small files. Default is no filtering: minimum 0 B and maximum no limit.
+          </p>
+        </fieldset>
         <button type="submit">Save</button>
       </form>
       <p id="status" class="status" role="status"></p>

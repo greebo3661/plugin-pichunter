@@ -1,4 +1,6 @@
 const DEFAULT_BASE_FOLDER = "pichunter";
+const DEFAULT_MIN_FILE_SIZE_BYTES = 0;
+const DEFAULT_MAX_FILE_SIZE_BYTES = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "PICHUNTER_SAVE_IMAGES") {
@@ -36,31 +38,32 @@ async function saveImagesFromActiveTab() {
   const directoryHandle = await getStoredDirectoryHandle();
 
   if (directoryHandle && await hasReadWritePermission(directoryHandle)) {
-    return saveImagesToDirectory(directoryHandle, path, pageInfo.images);
+    return saveImagesToDirectory(directoryHandle, path, pageInfo.images, path.sizeLimits);
   }
 
-  return downloadImages(path, pageInfo.images, false);
+  return downloadImages(path, pageInfo.images, false, path.sizeLimits);
 }
 
-async function saveImagesToDirectory(rootHandle, path, images) {
+async function saveImagesToDirectory(rootHandle, path, images, sizeLimits) {
   const domainHandle = await rootHandle.getDirectoryHandle(path.domain, { create: true });
   const pageHandle = await domainHandle.getDirectoryHandle(path.title, { create: true });
   const results = [];
   const failures = [];
+  let skippedCount = 0;
   const usedNames = new Set();
 
   for (const image of images) {
     try {
-      const filename = await reserveDirectoryFilename(pageHandle, usedNames, image.filename);
-      const response = await fetch(image.url, { credentials: "include" });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      const blob = await fetchImageBlob(image.url);
+      if (!matchesSizeLimits(blob.size, sizeLimits)) {
+        skippedCount += 1;
+        continue;
       }
 
+      const filename = await reserveDirectoryFilename(pageHandle, usedNames, image.filename);
       const fileHandle = await pageHandle.getFileHandle(filename, { create: true });
       const writable = await fileHandle.createWritable();
-      await writable.write(await response.blob());
+      await writable.write(blob);
       await writable.close();
       results.push(`${rootHandle.name}/${path.domain}/${path.title}/${filename}`);
     } catch (error) {
@@ -69,27 +72,35 @@ async function saveImagesToDirectory(rootHandle, path, images) {
   }
 
   if (!results.length) {
-    throw new Error(`No images were saved. Failed ${failures.length} image(s).`);
+    throw new Error(`No images were saved. Skipped ${skippedCount} image(s), failed ${failures.length} image(s).`);
   }
 
   return {
     count: results.length,
     failedCount: failures.length,
+    skippedCount,
     firstFile: results[0],
     storageMode: "directory"
   };
 }
 
-async function downloadImages(path, images, saveAs) {
+async function downloadImages(path, images, saveAs, sizeLimits) {
   const results = [];
   const failures = [];
+  let skippedCount = 0;
   const usedNames = new Set();
 
   for (const image of images) {
     try {
+      const blob = await fetchImageBlob(image.url);
+      if (!matchesSizeLimits(blob.size, sizeLimits)) {
+        skippedCount += 1;
+        continue;
+      }
+
       const filename = `${path.baseFolder}/${path.domain}/${path.title}/${reserveFilename(usedNames, image.filename)}`;
       const downloadId = await chrome.downloads.download({
-        url: image.url,
+        url: await blobToDataUrl(blob),
         filename,
         conflictAction: "uniquify",
         saveAs
@@ -102,24 +113,68 @@ async function downloadImages(path, images, saveAs) {
   }
 
   if (!results.length) {
-    throw new Error(`No images were saved. Failed ${failures.length} image(s).`);
+    throw new Error(`No images were saved. Skipped ${skippedCount} image(s), failed ${failures.length} image(s).`);
   }
 
   return {
     count: results.length,
     failedCount: failures.length,
+    skippedCount,
     firstFile: results[0]?.filename || "",
     storageMode: "downloads"
   };
 }
 
 async function buildSavePath(tab, pageInfo) {
-  const settings = await chrome.storage.sync.get({ baseFolder: DEFAULT_BASE_FOLDER });
+  const settings = await chrome.storage.sync.get({
+    baseFolder: DEFAULT_BASE_FOLDER,
+    minFileSizeBytes: DEFAULT_MIN_FILE_SIZE_BYTES,
+    maxFileSizeBytes: DEFAULT_MAX_FILE_SIZE_BYTES
+  });
   const baseFolder = sanitizePathPart(settings.baseFolder || DEFAULT_BASE_FOLDER);
   const domain = sanitizePathPart(new URL(tab.url).hostname);
   const title = sanitizePathPart(pageInfo.title || tab.title || "untitled-page");
+  const sizeLimits = parseSizeLimits(settings);
 
-  return { baseFolder, domain, title };
+  return { baseFolder, domain, title, sizeLimits };
+}
+
+async function fetchImageBlob(url) {
+  const response = await fetch(url, { credentials: "include" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.blob();
+}
+
+function parseSizeLimits(settings) {
+  const minBytes = Math.max(0, Number(settings.minFileSizeBytes) || 0);
+  const maxBytes = settings.maxFileSizeBytes === null || settings.maxFileSizeBytes === undefined
+    ? null
+    : Math.max(0, Number(settings.maxFileSizeBytes) || 0);
+
+  return { minBytes, maxBytes };
+}
+
+function matchesSizeLimits(size, limits) {
+  if (size < limits.minBytes) {
+    return false;
+  }
+
+  return limits.maxBytes === null || size <= limits.maxBytes;
+}
+
+async function blobToDataUrl(blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return `data:${blob.type || "application/octet-stream"};base64,${btoa(binary)}`;
 }
 
 function reserveFilename(usedNames, filename) {

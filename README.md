@@ -34,6 +34,8 @@ Downloads fallback path:
 Downloads/<base folder>/<domain>/<page title>/<image file>
 ```
 
+The settings page also includes minimum and maximum file size sliders. The default is no filtering: minimum `0 B`, maximum `No limit`.
+
 ## Services and Ports
 
 No services are started.
@@ -118,6 +120,7 @@ Chrome:
 3. Click `Load unpacked`.
 4. Select `plugin-pichunter\chrome`.
 5. Configure folder or fallback Downloads folder name in the extension settings.
+6. Optional: configure minimum and maximum image file size.
 
 Microsoft Edge:
 
@@ -126,6 +129,7 @@ Microsoft Edge:
 3. Click `Load unpacked`.
 4. Select `plugin-pichunter\chrome`.
 5. Configure folder or fallback Downloads folder name in the extension settings.
+6. Optional: configure minimum and maximum image file size.
 
 Yandex Browser:
 
@@ -134,6 +138,7 @@ Yandex Browser:
 3. Click `Load unpacked extension` / `Загрузить распакованное расширение`.
 4. Select `plugin-pichunter\chrome`.
 5. Configure folder or fallback Downloads folder name in the extension settings.
+6. Optional: configure minimum and maximum image file size.
 
 Firefox:
 
@@ -141,6 +146,7 @@ Firefox:
 2. Click `Load Temporary Add-on`.
 3. Select `plugin-pichunter\mozilla\manifest.json`.
 4. Configure the Downloads base folder and optional save dialog in the extension settings.
+5. Optional: configure minimum and maximum image file size.
 
 ### macOS
 
@@ -151,6 +157,7 @@ Chrome / Edge / Yandex Browser:
 3. Click `Load unpacked`.
 4. Select `plugin-pichunter/chrome`.
 5. Configure folder or fallback Downloads folder name in the extension settings.
+6. Optional: configure minimum and maximum image file size.
 
 Firefox:
 
@@ -158,6 +165,7 @@ Firefox:
 2. Click `Load Temporary Add-on`.
 3. Select `plugin-pichunter/mozilla/manifest.json`.
 4. Configure the Downloads base folder and optional save dialog in the extension settings.
+5. Optional: configure minimum and maximum image file size.
 
 Safari:
 
@@ -165,6 +173,7 @@ Safari:
 2. Convert `plugin-pichunter/safari` into a Safari Web Extension project.
 3. Build and enable the extension in Safari `Settings` / `Preferences` -> `Extensions`.
 4. Configure the Downloads base folder and optional save dialog in the extension settings.
+5. Optional: configure minimum and maximum image file size.
 
 ## Run / Rebuild / Smoke Check
 
@@ -184,6 +193,7 @@ See:
 - CSS background images, canvas content, blob-only generated images, and images inside inaccessible iframes are not saved.
 - Lazy-loaded images that have not resolved to an `http` or `https` URL are not saved.
 - Some image downloads can fail when a website blocks direct image requests, hotlinking, or authenticated image access.
+- File size filtering requires fetching image data before saving, so blocked image requests are reported as failed.
 - Chromium uses a folder picker where supported; otherwise images are saved under the browser Downloads directory.
 - Firefox cannot persistently reuse an arbitrary selected folder from extension settings; use its save dialog option for manual destination choice.
 - Safari source requires macOS/Xcode conversion before it can run. Safari also lacks Chromium's persistent folder picker.

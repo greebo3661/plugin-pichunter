@@ -1,4 +1,6 @@
 const DEFAULT_BASE_FOLDER = "pichunter";
+const DEFAULT_MIN_FILE_SIZE_BYTES = 0;
+const DEFAULT_MAX_FILE_SIZE_BYTES = null;
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "PICHUNTER_SAVE_IMAGES") {
@@ -29,22 +31,34 @@ async function saveImagesFromActiveTab() {
     throw new Error("No DOM images found on this page.");
   }
 
-  const settings = await getStorage({ baseFolder: DEFAULT_BASE_FOLDER, askWhereToSave: false });
+  const settings = await getStorage({
+    baseFolder: DEFAULT_BASE_FOLDER,
+    askWhereToSave: false,
+    minFileSizeBytes: DEFAULT_MIN_FILE_SIZE_BYTES,
+    maxFileSizeBytes: DEFAULT_MAX_FILE_SIZE_BYTES
+  });
   const path = buildSavePath(tab, pageInfo, settings.baseFolder);
 
-  return downloadImages(path, pageInfo.images, Boolean(settings.askWhereToSave));
+  return downloadImages(path, pageInfo.images, Boolean(settings.askWhereToSave), parseSizeLimits(settings));
 }
 
-async function downloadImages(path, images, saveAs) {
+async function downloadImages(path, images, saveAs, sizeLimits) {
   const results = [];
   const failures = [];
+  let skippedCount = 0;
   const usedNames = new Set();
 
   for (const image of images) {
     try {
+      const blob = await fetchImageBlob(image.url);
+      if (!matchesSizeLimits(blob.size, sizeLimits)) {
+        skippedCount += 1;
+        continue;
+      }
+
       const filename = `${path.baseFolder}/${path.domain}/${path.title}/${reserveFilename(usedNames, image.filename)}`;
       const downloadId = await downloadFile({
-        url: image.url,
+        url: await blobToDataUrl(blob),
         filename,
         conflictAction: "uniquify",
         saveAs
@@ -57,15 +71,51 @@ async function downloadImages(path, images, saveAs) {
   }
 
   if (!results.length) {
-    throw new Error(`No images were saved. Failed ${failures.length} image(s).`);
+    throw new Error(`No images were saved. Skipped ${skippedCount} image(s), failed ${failures.length} image(s).`);
   }
 
   return {
     count: results.length,
     failedCount: failures.length,
+    skippedCount,
     firstFile: results[0]?.filename || "",
     storageMode: "downloads"
   };
+}
+
+async function fetchImageBlob(url) {
+  const response = await fetch(url, { credentials: "include" });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.blob();
+}
+
+function parseSizeLimits(settings) {
+  const minBytes = Math.max(0, Number(settings.minFileSizeBytes) || 0);
+  const maxBytes = settings.maxFileSizeBytes === null || settings.maxFileSizeBytes === undefined
+    ? null
+    : Math.max(0, Number(settings.maxFileSizeBytes) || 0);
+
+  return { minBytes, maxBytes };
+}
+
+function matchesSizeLimits(size, limits) {
+  if (size < limits.minBytes) {
+    return false;
+  }
+
+  return limits.maxBytes === null || size <= limits.maxBytes;
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read image data."));
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
 }
 
 function buildSavePath(tab, pageInfo, configuredBaseFolder) {

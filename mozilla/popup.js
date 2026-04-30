@@ -37,7 +37,10 @@ async function saveImages() {
     const failedText = response.result.failedCount
       ? ` Failed: ${response.result.failedCount}.`
       : "";
-    setStatus(`Saved ${response.result.count} image(s).${failedText} First: ${response.result.firstFile}`, "success");
+    const skippedText = response.result.skippedCount
+      ? ` Skipped by size: ${response.result.skippedCount}.`
+      : "";
+    setStatus(`Saved ${response.result.count} image(s).${skippedText}${failedText} First: ${response.result.firstFile}`, "success");
   });
 }
 

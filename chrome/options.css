@@ -46,6 +46,11 @@ input {
   font-size: 14px;
 }
 
+input[type="range"] {
+  padding: 0;
+  cursor: pointer;
+}
+
 button {
   margin-top: 16px;
   margin-right: 8px;
@@ -68,6 +73,14 @@ button.secondary {
   color: #5f6368;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.range-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: #5f6368;
+  font-size: 12px;
 }
 
 .status.success {

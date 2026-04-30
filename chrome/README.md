@@ -18,6 +18,8 @@ Downloads/<base folder>/<domain>/<page title>/<image file>
 
 The default fallback base folder is `pichunter`. Change it in the extension settings.
 
+The settings page includes minimum and maximum file size sliders. The default is no filtering: minimum `0 B`, maximum `No limit`.
+
 ## Services and Ports
 
 No services are started.
@@ -80,8 +82,9 @@ If `browser://extensions` does not show developer controls, try `chrome://extens
 2. Wait until dynamic content finishes loading.
 3. Click `pichunter`.
 4. Optional: click `Settings`, then `Choose folder...` to select the image root directory through the system folder picker.
-5. Click `Save page images`.
-6. Open the saved images under `<selected folder>/<domain>/<page title>/`, or under `Downloads/<base folder>/<domain>/<page title>/` if no folder is selected.
+5. Optional: adjust the minimum and maximum file size sliders.
+6. Click `Save page images`.
+7. Open the saved images under `<selected folder>/<domain>/<page title>/`, or under `Downloads/<base folder>/<domain>/<page title>/` if no folder is selected.
 
 ## Rebuild
 
@@ -96,9 +99,11 @@ After editing files, reload the unpacked extension on the browser extensions pag
 3. Open `Settings` and click `Choose folder...`.
 4. Select a local folder and grant write permission.
 5. Confirm the popup shows `<selected folder>/<domain>/<page title>/`.
-6. Click `Save page images`.
-7. Confirm image files appear under `<selected folder>/<domain>/<page title>/`.
-8. Click `Use Downloads folder`, run save again, and confirm the Downloads fallback is used.
+6. Leave file size settings at the default `0 B` to `No limit`.
+7. Click `Save page images`.
+8. Confirm image files appear under `<selected folder>/<domain>/<page title>/`.
+9. Set a minimum size that excludes small icons, run save again, and confirm fewer files are saved or skipped by size.
+10. Click `Use Downloads folder`, run save again, and confirm the Downloads fallback is used.
 
 ## Current Limitations and Known Risks
 
@@ -108,4 +113,5 @@ After editing files, reload the unpacked extension on the browser extensions pag
 - CSS background images, canvas content, blob-only generated images, and images inside inaccessible iframes are not saved.
 - Lazy-loaded images that have not resolved to an `http` or `https` URL are not saved.
 - Direct folder writes fetch image URLs from the extension context; some sites can block those requests.
+- File size filtering requires fetching image data before saving, so blocked image requests are reported as failed.
 - Browser-internal pages such as `chrome://`, `edge://`, `browser://`, the Chrome Web Store, and pages that block scripting cannot be scanned.
