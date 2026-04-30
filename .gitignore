@@ -1,0 +1,28 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs / temp
+*.log
+tmp/
+temp/
+
+# Dependencies / build output
+node_modules/
+dist/
+build/
+out/
+
+# Browser extension packages
+*.crx
+*.xpi
+*.appex
+
+# macOS / Xcode generated Safari wrapper
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/

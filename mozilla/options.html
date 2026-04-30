@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>pichunter settings</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main>
+      <h1>pichunter settings</h1>
+      <form id="settingsForm">
+        <fieldset>
+          <legend>Save dialog</legend>
+          <label class="checkbox">
+            <input id="askWhereToSave" name="askWhereToSave" type="checkbox">
+            Ask where to save each image
+          </label>
+          <p class="hint">
+            Firefox extensions cannot persistently select an arbitrary output folder from settings.
+            Enable this option to open Firefox's save dialog for every image.
+          </p>
+        </fieldset>
+        <label for="baseFolder">Base folder inside Firefox Downloads</label>
+        <input id="baseFolder" name="baseFolder" type="text" placeholder="pichunter" autocomplete="off">
+        <p class="hint">
+          Used when the save dialog option is disabled.
+          Final path: Downloads/&lt;base folder&gt;/&lt;domain&gt;/&lt;page title&gt;/&lt;image file&gt;
+        </p>
+        <button type="submit">Save</button>
+      </form>
+      <p id="status" class="status" role="status"></p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

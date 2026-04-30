@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "pichunter",
+  "description": "Save DOM images from the active page by domain and page title.",
+  "version": "1.0.0",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "storage",
+    "tabs",
+    "<all_urls>"
+  ],
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_title": "pichunter"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
